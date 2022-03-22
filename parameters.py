@@ -12,8 +12,20 @@ This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
 import torch
 
-class Params:
-    def __init__(self):
-        DEVICE = torch.device('cuda') if torch.cuda.is_available \
+class GrParams:
+    """
+    Parameters for AM visualization on gr-convnet
+    """
+    def __init__(self, net: str):
+        self.DEVICE = torch.device('cuda') if torch.cuda.is_available \
                                       else torch.device('cpu')
+        # AM params
+        self.IMG_SIZE = (4, 64, 64) 
+        self.EPOCHS = 251
+        self.N_INIT_KERNELS = 32
+        self.INIT_METHOD = 'noise'
+        self.vis_layers = ['conv1', 'conv2', 'conv3', 'res1', 'res2', 'res3']
+
+        # Paths params
+        self.PATH = 'kernel-am-grasp-pixel'
         
