@@ -12,6 +12,10 @@ Available AM losses and regularizers include:
 This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
 
-from parameters import Params
+from parameters import GrParams
 
-params = Params()
+# Params class containing parameters for AM visualization.
+params = GrParams()
+
+for vis_layer in params.vis_layers:
+    print('Visualizing for %s layer' % vis_layer)
