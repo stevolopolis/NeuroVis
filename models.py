@@ -1,6 +1,20 @@
+"""
+This file contains a class that extracts a submodel from
+a pretrained model, up until the selected layer for
+visualization.
+"""
 import torch.nn as nn
 
+
 class ExtractModel(nn.Module):
+    """This class extracts a subset of a pretrained model
+    up till the layer of visualization.
+    
+    There are three implementations for three different models:
+        - resnet18
+        - vgg16
+        - gr-convnet
+    """
     def __init__(self, model, layer, net_type='gr-convnet', device='cuda'):
         super().__init__()
         self.output_layer_name = layer

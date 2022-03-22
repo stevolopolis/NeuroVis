@@ -18,6 +18,9 @@ import numpy as np
 
 
 def TVLoss(img):
+    """Total variance loss that calculates the L2 difference
+    between adjacent pixels.
+    """
     ori_img_h = img[:-1, :]
     ori_img_v = img[:, :-1]
     shift_img_h = img[1:, :]
@@ -28,18 +31,31 @@ def TVLoss(img):
 
     tv_loss = h_loss + v_loss
     n_pixels = img.shape[0] * img.shape[1]
+    # This normalization term is taken from 
+    # (Mahendran A. et al.)
+    # Visualizing deep convolutional neural networks using natural pre-images.
     norm_tv_loss = tv_loss / n_pixels / (14 ** 2)
     
     return norm_tv_loss
 
 
 def LPLoss(img, p=1):
+    """LP loss on pixel values.
+    
+    Prevents explosive pixel values and forces values to be closer
+    to natural colors.
+    
+    Usually, L1, L2, or L-inf are used.
+    """
     if np.isinf(p):
         lp_loss = torch.max(img)
     else:
         lp_loss = torch.pow(torch.sum(torch.pow(img, p)), 6 / p)
 
     n_pixels_per_img = img.shape[0] * img.shape[1]
+    # This normalization term is taken from 
+    # (Mahendran A. et al.)
+    # Visualizing deep convolutional neural networks using natural pre-images.
     norm_lp_loss = lp_loss / n_pixels_per_img / (80 ** 6)
     
     return norm_lp_loss
