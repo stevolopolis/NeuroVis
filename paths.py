@@ -28,3 +28,5 @@ class GrPath:
         """This method creates sub-directory in <vis> for a specific layer."""
         if layer not in os.listdir(os.path.join('vis', self.main_path)):
             os.makedirs(os.path.join('vis', self.main_path, layer))
+
+        self.save_subdir = os.path.join('vis', self.main_path, layer)
