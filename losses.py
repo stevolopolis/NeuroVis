@@ -1,4 +1,36 @@
+"""
+This file contains some loss functions that may be used as 
+regularizers during AM visualization.
+
+Loss functions include:
+    - TV loss*
+    - LP loss*
+    - BCE loss on pixel valeus
+    - Log loss with target value as 255
+    - Sigmoid loss
+
+*losses are standard and should be used.
+"""
+
 import torch
+import torch.nn as nn
+import numpy as np
+
+
+def TVLoss(img):
+    ori_img_h = img[:-1, :]
+    ori_img_v = img[:, :-1]
+    shift_img_h = img[1:, :]
+    shift_img_v = img[:, 1:]
+
+    h_loss = torch.sum(torch.square(ori_img_h - shift_img_h))
+    v_loss = torch.sum(torch.square(ori_img_v - shift_img_v))
+
+    tv_loss = h_loss + v_loss
+    n_pixels = img.shape[0] * img.shape[1]
+    norm_tv_loss = tv_loss / n_pixels / (14 ** 2)
+    
+    return norm_tv_loss
 
 
 def LPLoss(img, p=1):
@@ -29,22 +61,6 @@ def InputClipLoss(img, device):
     loss = torch.sum(loss_img)
 
     return loss 
-
-
-def TVLoss(img):
-    ori_img_h = img[:-1, :]
-    ori_img_v = img[:, :-1]
-    shift_img_h = img[1:, :]
-    shift_img_v = img[:, 1:]
-
-    h_loss = torch.sum(torch.square(ori_img_h - shift_img_h))
-    v_loss = torch.sum(torch.square(ori_img_v - shift_img_v))
-
-    tv_loss = h_loss + v_loss
-    n_pixels = img.shape[0] * img.shape[1]
-    norm_tv_loss = tv_loss / n_pixels / (14 ** 2)
-    
-    return norm_tv_loss
 
 
 def SigmoidLoss(img, target=0.9):
