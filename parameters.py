@@ -17,6 +17,10 @@ class GrParams:
     Parameters for AM visualization on gr-convnet
     """
     def __init__(self, net: str):
+        # network name
+        self.net = 'gr-convnet'
+
+        # device: cpu / gpu
         self.DEVICE = torch.device('cuda') if torch.cuda.is_available \
                                       else torch.device('cpu')
         # AM params
@@ -31,5 +35,5 @@ class GrParams:
 
         # Paths params
         self.PATH = 'kernel-am-grasp-pixel'
-        self.TRAINED_MODEL_PATH = 'trained-models/epoch_19_iou_0.98'
+        self.MODEL_PATH = 'trained-models/epoch_19_iou_0.98'
         
