@@ -16,12 +16,13 @@ import torch
 from parameters import GrParams
 from paths import GrPath
 from models import ExtractModel
+from am import ActivationMaximization
 
 # Params class containing parameters for AM visualization.
 params = GrParams()
 # Path class for managing required directories
 # gr-convnet / resnet18 / vgg16
-paths = GrPath('gr-convnet')
+paths = GrPath()
 
 # AM visualization
 for vis_layer in params.vis_layers:
@@ -42,4 +43,6 @@ for vis_layer in params.vis_layers:
 
         # Create submodel with output = selected kernel
         ext_model = ExtractModel(model, vis_layer, net_type=params.net, device=params.DEVICE)
-
+        am_func = ActivationMaximization(ext_model, params.IMG_SIZE, params.LR,
+                                         params.EPOCHS, params.INIT_METHOD, params.DEVICE)
+        start_img, backprop_img, target_img, fmap_img = am_func.backprop_pixel()

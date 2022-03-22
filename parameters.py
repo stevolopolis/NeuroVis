@@ -16,7 +16,7 @@ class GrParams:
     """
     Parameters for AM visualization on gr-convnet
     """
-    def __init__(self, net: str):
+    def __init__(self):
         # network name
         self.net = 'gr-convnet'
 
@@ -27,6 +27,7 @@ class GrParams:
         self.IMG_SIZE = (4, 64, 64) 
         self.EPOCHS = 251
         self.LR = 1e-1
+        self.INIT_METHOD = 'noise'  # or 'zero'
 
         # Kernel params
         self.N_KERNELS = 32
