@@ -1,3 +1,3 @@
-# NeuroVis -- A CNN kernel visualization repo specialized for neuroscience research.
+# NeuroVis -- CNN visualization for neuroscience research.
 ---
 
