@@ -12,11 +12,13 @@ Available AM losses and regularizers include:
 This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
 import torch
+import cv2
 
 from parameters import GrParams
 from paths import GrPath
 from models import ExtractModel
 from am import ActivationMaximization
+from utils import am_img_mat
 
 # Params class containing parameters for AM visualization.
 params = GrParams()
@@ -50,4 +52,6 @@ for vis_layer in params.vis_layers:
         am_func.backprop_pixel()
 
         # Visualize/Save AM results
-        init_rgb, init_d, backprop_rgb, backprop_d, target, fmap = am_func.show_am()
+        am_img_set = am_func.show_am()
+        img_matrix = am_img_mat(am_img_set)
+        cv2.imwrite(img_matrix)
