@@ -9,7 +9,7 @@ Objectives of this file:
 import torch 
 import cv2 as cv
 from torchvision import transforms
-from utils import create_rgbd_image, tensor2img
+from utils import array2img, tensor2array, slice_img
 
 from parameters import GrParams
 
@@ -73,12 +73,6 @@ class ActivationMaximization():
     def backprop_pixel(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1):
         """Implements AM on <self.backprop_img> on a selected kernel.
 
-        Returns <start_img>, <backprop_img>, <target_img>, and <fmap_img>:
-            - start_img: initial noisy/zero input image
-            - end_img: input image after AM backpropagation
-            - target: target feature map for selected kernel
-            - output: feature map of selected kernel given <end_img>
-
         Parameters:
             - kernel_idx: index of visualizing kernel
             - alpha: weight for pixel-value loss
@@ -116,27 +110,41 @@ class ActivationMaximization():
 
         # Display AM loss
         self.show_loss()
-        
-        return self.show_am
 
     def show_loss(self):
-        # Display loss value for current backprop step
+        """Print loss value for current backprop step."""
         rounded_loss = round(self.loss.item(), 5)
         print('Epoch: %s\t Loss: %s' % (self.epochs, rounded_loss))
 
     def show_am(self):
-        # Convert tensors to images compatible for cv2.imshow/cv2.imwrite
-        start_img = tensor2img(self.start)
-        backprop_img = tensor2img(self.backprop)
-        target_img = tensor2img(self.target)
-        fmap_img = tensor2img(self.fmap_output)
+        """Return a tuple of 6 images after AM is run.
 
-        # for vgg/resnet
-        backprop_img = create_rgbd_image(backprop_img, normalize=True)
+        Return images:
+            - start_img_rgb: RGB image of initial noisy/zero input image
+            - start_img_d: Depth image of initial noisy/zero input image
+            - backprop_img_rgb: RGB image of input image after AM backprop
+            - backprop_img_d: Depth image of input image after AM backprop
+            - target: image of target feature map for selected kernel
+            - output: image of feature map of selected kernel
+        """
+        # Convert tensors to images compatible for cv2.imshow/cv2.imwrite
+        start_img = tensor2array(self.start)
+        backprop_img = tensor2array(self.backprop)
+        target_img = tensor2array(self.target)
+        fmap_img = tensor2array(self.fmap_output)
+
         # for gr-convnet
-        start_img = create_rgbd_image(start_img, normalize=True)
-        backprop_img = create_rgbd_image(backprop_img, normalize=True)
-        target_img = create_rgbd_image(target_img, normalize=True)
-        fmap_img = create_rgbd_image(fmap_img, normalize=True)
+        start_img = array2img(start_img)
+        backprop_img = array2img(backprop_img)
+        target_img = array2img(target_img)
+        fmap_img = array2img(fmap_img)
+
+        # Slice up 4D input image into RGB and Depth when
+        # network under visualization is "gr-convnet"
+        if params.net == 'gr-convnet':
+            start_img_rgb, start_img_d = slice_img(start_img)
+            backprop_img_rgb, backprop_img_d = slice_img(backprop_img)
         
-        return start_img, backprop_img, target_img, fmap_img
+        return start_img_rgb, start_img_d, \
+               backprop_img_rgb, backprop_img_d, \
+               target_img, fmap_img

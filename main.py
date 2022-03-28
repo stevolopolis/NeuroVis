@@ -45,4 +45,9 @@ for vis_layer in params.vis_layers:
         ext_model = ExtractModel(model, vis_layer, net_type=params.net, device=params.DEVICE)
         am_func = ActivationMaximization(ext_model, params.IMG_SIZE, params.LR,
                                          params.EPOCHS, params.INIT_METHOD, params.DEVICE)
-        start_img, backprop_img, target_img, fmap_img = am_func.backprop_pixel()
+        # Run Activation Maximization
+        print('Running AM on layer %s kernel %s' % (vis_layer, kernel_idx))
+        am_func.backprop_pixel()
+
+        # Visualize/Save AM results
+        init_rgb, init_d, backprop_rgb, backprop_d, target, fmap = am_func.show_am()
