@@ -4,6 +4,7 @@ processing images, directories, or image generation, etc.
 """
 
 import os
+import torch
 import shutil
 import cv2
 import numpy as np
@@ -19,11 +20,15 @@ params = GrParams()
 def tensor2array(tensor):
     """Returns numpy arrays for from pytorch tensors."""
     
-    img = tensor.detach().cpu().numpy()
     # if tensor is a 2-dimensional map (e.g. feature maps)
-    # we repeat the map for 3 times for RGB channels
-    if img.shape[1] == 1:
-        img = img.repeat(1, 3, 1, 1)
+    # we unsqueeze the map and repeat along RGB channel for
+    # 3 times.
+    if len(tensor.shape) == 2:
+        tensor = torch.unsqueeze(tensor, 0)
+        tensor = torch.unsqueeze(tensor, 0)
+        tensor = tensor.repeat(1, 3, 1, 1)
+    
+    img = tensor.detach().cpu().numpy()
 
     return img[0]
 
@@ -39,7 +44,7 @@ def array2img(img):
     img = np.moveaxis(img, 0, 2)
 
     # resize for small images
-    img = cv.resize(img, (224, 224), interpolation=cv.INTER_LINEAR)
+    img = cv2.resize(img, params.vis_img_size, interpolation=cv2.INTER_LINEAR)
 
     return img.astype(int)
 
@@ -52,6 +57,14 @@ def slice_img(img):
     d_img = img[:, :, 3]
 
     return rgb_img, d_img
+
+
+def expand_2d_img(img):
+    """Return cv2.imwrite-ready 3D array given a 2D array."""
+    img = np.tile(img, (3, 1, 1))
+    img = np.moveaxis(img, 0, -1)
+
+    return img
 
 
 def imagenet_norm(img):
@@ -92,13 +105,37 @@ def pixel_range_norm(img):
 
 
 # ===================================
-# Directory management
+# Image processing
 # ===================================
 def am_img_mat(imgs):
-    """Return a 2x3 matrix of images."""
-    pass
+    """Return a 2x3 (2x4 including empty col) matrix of images.
+
+    Each element in imgs has the shape: (h, w, 3)
+    
+    Parameters:
+        - imgs[0]: <start_img_rgb>
+        - imgs[1]: <start_img_d>
+        - imgs[2]: <backprop_img_rgb>
+        - imgs[3]: <backprop_img_d>
+        - imgs[4]: <target_img>
+        - imgs[5]: <fmap_img>
+    """
+    col_h = params.vis_img_size[0] * 2
+    col_w = params.vis_img_size[1]
+
+    start_img_col = np.concatenate((imgs[0], imgs[1]), axis=0)
+    backprop_img_col = np.concatenate((imgs[2], imgs[3]), axis=0)
+    empty_col = np.zeros((col_h, col_w, 3))
+    fmap_col = np.concatenate((imgs[4], imgs[5]), axis=0)
+
+    img_mat = np.concatenate((start_img_col, backprop_img_col, empty_col, fmap_col), axis=1)
+
+    return img_mat
 
 
+# ===================================
+# Directory management
+# ===================================
 def clean_dir(dir):
     for name in os.listdir(dir):
         path = os.path.join(dir, name)

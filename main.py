@@ -24,7 +24,7 @@ from utils import am_img_mat
 params = GrParams()
 # Path class for managing required directories
 # gr-convnet / resnet18 / vgg16
-paths = GrPath()
+paths = GrPath('gr-convnet')
 
 # AM visualization
 for vis_layer in params.vis_layers:
@@ -34,10 +34,7 @@ for vis_layer in params.vis_layers:
 
     # AM on individual kernels
     for kernel_idx in range(params.N_KERNELS):
-        start_img_path = '%s/%s_%s_start.png' % (paths.save_subdir, vis_layer, kernel_idx)
-        end_img_path = '%s/%s_%s_end.png' % (paths.save_subdir, vis_layer, kernel_idx)
-        target_path = '%s/%s_%s_target.png' % (paths.save_subdir, vis_layer, kernel_idx)
-        output_path = '%s/%s_%s_output.png' % (paths.save_subdir, vis_layer, kernel_idx)
+        save_img_path = '%s/%s_%s.png' % (paths.save_subdir, vis_layer, kernel_idx)
 
         # Load trained gr-convnet model
         model = torch.load(params.MODEL_PATH, map_location=params.DEVICE)
@@ -49,9 +46,9 @@ for vis_layer in params.vis_layers:
                                          params.EPOCHS, params.INIT_METHOD, params.DEVICE)
         # Run Activation Maximization
         print('Running AM on layer %s kernel %s' % (vis_layer, kernel_idx))
-        am_func.backprop_pixel()
+        am_func.backprop_pixel(kernel_idx)
 
         # Visualize/Save AM results
         am_img_set = am_func.show_am()
         img_matrix = am_img_mat(am_img_set)
-        cv2.imwrite(img_matrix)
+        cv2.imwrite(save_img_path, img_matrix)

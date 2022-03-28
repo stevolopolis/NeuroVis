@@ -37,4 +37,7 @@ class GrParams:
         # Paths params
         self.PATH = 'kernel-am-grasp-pixel'
         self.MODEL_PATH = 'trained-models/epoch_19_iou_0.98'
+
+        # Visualization params
+        self.vis_img_size = (224, 224)
         

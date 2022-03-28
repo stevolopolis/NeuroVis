@@ -9,7 +9,7 @@ Objectives of this file:
 import torch 
 import cv2 as cv
 from torchvision import transforms
-from utils import array2img, tensor2array, slice_img
+from utils import array2img, tensor2array, slice_img, expand_2d_img
 
 from parameters import GrParams
 
@@ -85,10 +85,10 @@ class ActivationMaximization():
 
             # for vgg / resnet
             if params.net in ('vgg16', 'resnet18'):
-                input = self.preprocess(self.backprop_img.squeeze()).unsqueeze(0)
+                input = self.preprocess(self.backprop.squeeze()).unsqueeze(0)
             # for gr-convnet
             elif params.net == 'gr-convnet':
-                input = self.backprop_img
+                input = self.backprop
 
             self.output = self.model(input)
             self.fmap_output = self.output[0, kernel_idx]
@@ -99,14 +99,14 @@ class ActivationMaximization():
             x_mid = w // 2
             y_mid = h // 2
 
-            self.pixel_loss -= torch.mean(self.fmap_output[y_mid, x_mid])
-            self.loss = self.pixel_loss
+            pixel_loss = -torch.mean(self.fmap_output[y_mid, x_mid])
+            self.loss = pixel_loss
 
             self.loss.backward()
             self.optim.step()
 
         # Target feature map with maxed out pixel values
-        self.target = torch.ones(self.selected_output.shape)
+        self.target = torch.ones(self.fmap_output.shape)
 
         # Display AM loss
         self.show_loss()
@@ -145,6 +145,6 @@ class ActivationMaximization():
             start_img_rgb, start_img_d = slice_img(start_img)
             backprop_img_rgb, backprop_img_d = slice_img(backprop_img)
         
-        return start_img_rgb, start_img_d, \
-               backprop_img_rgb, backprop_img_d, \
+        return start_img_rgb, expand_2d_img(start_img_d), \
+               backprop_img_rgb, expand_2d_img(backprop_img_d), \
                target_img, fmap_img
