@@ -9,7 +9,7 @@ Objectives of this file:
 import torch 
 import cv2 as cv
 from torchvision import transforms
-from utils import create_rgbd_image, output_set_prep
+from utils import create_rgbd_image, tensor2img
 
 from parameters import GrParams
 
@@ -67,10 +67,25 @@ class ActivationMaximization():
 
         self.optim = torch.optim.Adam([self.backprop], lr=lr, weight_decay=1e-6)
 
-    def backprop_full(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1, save_img_set=False):
+    def backprop_full(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1):
         pass
 
-    def backprop_pixel(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1, save_img_set=False):
+    def backprop_pixel(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1):
+        """Implements AM on <self.backprop_img> on a selected kernel.
+
+        Returns <start_img>, <backprop_img>, <target_img>, and <fmap_img>:
+            - start_img: initial noisy/zero input image
+            - end_img: input image after AM backpropagation
+            - target: target feature map for selected kernel
+            - output: feature map of selected kernel given <end_img>
+
+        Parameters:
+            - kernel_idx: index of visualizing kernel
+            - alpha: weight for pixel-value loss
+            - beta: weight for total-variation loss
+            - sigma: weight for jitter loss
+            - p: raising power for LP loss
+        """
         for _ in range(self.epochs):
             self.optim.zero_grad()
 
@@ -98,15 +113,24 @@ class ActivationMaximization():
 
         # Target feature map with maxed out pixel values
         self.target = torch.ones(self.selected_output.shape)
-        return self.show_loss(self.epochs)
+
+        # Display AM loss
+        self.show_loss()
+        
+        return self.show_am
 
     def show_loss(self):
+        # Display loss value for current backprop step
         rounded_loss = round(self.loss.item(), 5)
         print('Epoch: %s\t Loss: %s' % (self.epochs, rounded_loss))
-        start_img, backprop_img, target_img, fmap_img = output_set_prep(self.start,
-                                                                        self.backprop,
-                                                                        self.target,
-                                                                        self.fmap_output)
+
+    def show_am(self):
+        # Convert tensors to images compatible for cv2.imshow/cv2.imwrite
+        start_img = tensor2img(self.start)
+        backprop_img = tensor2img(self.backprop)
+        target_img = tensor2img(self.target)
+        fmap_img = tensor2img(self.fmap_output)
+
         # for vgg/resnet
         backprop_img = create_rgbd_image(backprop_img, normalize=True)
         # for gr-convnet
