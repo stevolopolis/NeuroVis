@@ -1,9 +1,18 @@
 """
-Objectives of this file:
-    1. Given a selected feature map, create the input image that maximizes the activations of that map
-    2. Output the kernel image of the selected feature map
-    3. Given a selected image, visualize the output of the selected feature map
-    4. (optional) Visualize each individual feature map for comparison and do (1)-(3) for all
+This file contains the ActivationMaximization class which
+implements AM on selected kernels for a pretrained model.
+
+Regularizer losses are also available for improved AM
+results. The regularizers include:
+    - LP loss
+    - Jitter loss
+    - Total variation loss
+
+The class also creates a 2x3 image matrix that contains:
+    - initial image (RGB + Depth)
+    - backpropagated image (RGB + Depth)
+    - target feature map (i.e. fully activated pixels)
+    - feature map of backpropagated image
 """
 
 import torch 
@@ -68,9 +77,6 @@ class ActivationMaximization():
         self.optim = torch.optim.Adam([self.backprop], lr=lr, weight_decay=1e-6)
 
     def backprop_full(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1):
-        pass
-
-    def backprop_pixel(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1):
         """Implements AM on <self.backprop_img> on a selected kernel.
 
         Parameters:
@@ -92,14 +98,8 @@ class ActivationMaximization():
 
             self.output = self.model(input)
             self.fmap_output = self.output[0, kernel_idx]
-            
-            # Getting center coordinate of feature map
-            h = self.fmap_output.shape[0]
-            w = self.fmap_output.shape[1]
-            x_mid = w // 2
-            y_mid = h // 2
 
-            pixel_loss = -torch.mean(self.fmap_output[y_mid, x_mid])
+            pixel_loss = -torch.mean(self.fmap_output)
             self.loss = pixel_loss
 
             self.loss.backward()
@@ -107,6 +107,42 @@ class ActivationMaximization():
 
         # Target feature map with maxed out pixel values
         self.target = torch.ones(self.fmap_output.shape)
+
+        # Display AM loss
+        self.show_loss()
+
+    def backprop_pixel(self, kernel_idx):
+        """Implements pixel-AM on <self.backprop_img> on a selected kernel.
+
+        Pixel-AM is done by calculating losses on 1 center pixel.
+        """
+        for _ in range(self.epochs):
+            self.optim.zero_grad()
+
+            # for vgg / resnet
+            if params.net in ('vgg16', 'resnet18'):
+                input = self.preprocess(self.backprop.squeeze()).unsqueeze(0)
+            # for gr-convnet
+            elif params.net == 'gr-convnet':
+                input = self.backprop
+
+            self.output = self.model(input)
+            self.fmap_output = self.output[0, kernel_idx]
+            
+            # Getting center coordinate of feature map
+            h = self.fmap_output.shape[0]
+            w = self.fmap_output.shape[1]
+            x_mid = w // 2
+            y_mid = h // 2
+
+            self.loss = -torch.mean(self.fmap_output[y_mid, x_mid])
+
+            self.loss.backward()
+            self.optim.step()
+
+        # Target feature map with maxed out pixel values
+        self.target = torch.zeros(self.fmap_output.shape)
+        self.target[y_mid, x_mid] = 1.0
 
         # Display AM loss
         self.show_loss()
@@ -145,6 +181,7 @@ class ActivationMaximization():
             start_img_rgb, start_img_d = slice_img(start_img)
             backprop_img_rgb, backprop_img_d = slice_img(backprop_img)
         
+        # expand_2d_img() is called for 2D-arrays with shape (h, w)
         return start_img_rgb, expand_2d_img(start_img_d), \
                backprop_img_rgb, expand_2d_img(backprop_img_d), \
                target_img, fmap_img
