@@ -16,6 +16,12 @@ Besides the conventional methods such as Activation Maximization (AM) and its va
 
 ## Background
 
+Recent progress in deep learning has taken a lot of intuitions from the human brain. From the simple multi-layer perceptron to the variations of CNNs, these architecture share substantial similarity with how the brain processes sensory information (e.g. V1, V2, etc.). With the growth in computational power, these neural networks have been showing performances that exceed the human mind in specific downstream tasks. 
+
+However, till this day, the inner-workings of these powerful neural networks are still in question. While there are methods for visualizing weights of neural networks such as activation maximization and gradient-based saliency maps, the process of understanding individual weights in the network are still unintuitive to scientists. 
+
+NeuroVis tries to tackle this problem from a different perspective.
+
 ## Activation Maximization
 
 ## Group AM
