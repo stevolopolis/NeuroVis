@@ -1,5 +1,5 @@
 """
-This file contains the ActivationMaximization class which
+This file contains the <ActivationMaximization> class which
 implements AM on selected kernels for a pretrained model.
 
 Regularizer losses are also available for improved AM
