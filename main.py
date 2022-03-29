@@ -26,6 +26,10 @@ params = GrParams()
 # gr-convnet / resnet18 / vgg16
 paths = GrPath('gr-convnet')
 
+# Load trained gr-convnet model
+model = torch.load(params.MODEL_PATH, map_location=params.DEVICE)
+model.eval()
+
 # AM visualization
 for vis_layer in params.vis_layers:
     print('Visualizing for %s layer' % vis_layer)
@@ -35,10 +39,6 @@ for vis_layer in params.vis_layers:
     # AM on individual kernels
     for kernel_idx in range(params.N_KERNELS):
         save_img_path = '%s/%s_%s.png' % (paths.save_subdir, vis_layer, kernel_idx)
-
-        # Load trained gr-convnet model
-        model = torch.load(params.MODEL_PATH, map_location=params.DEVICE)
-        model.eval()
 
         # Create submodel with output = selected kernel
         ext_model = ExtractModel(model, vis_layer, net_type=params.net, device=params.DEVICE)
