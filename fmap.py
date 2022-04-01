@@ -1,13 +1,19 @@
 """
+This code passes a selected set of images takes from the
+Jacquard Dataset through a pretrained model and generates
+the feature maps.
 
+The feature maps are presented as a matrix of images, where
+each image is the output of one kernel.
+
+The layer of visualization could be specified in parameters.py
+
+This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
 
 import torch
 import glob
-import os
-import numpy as np
 import cv2
-from PIL import Image
 from tqdm import tqdm
 
 from parameters import GrParams
