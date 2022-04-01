@@ -7,7 +7,10 @@ import os
 import torch
 import shutil
 import cv2
+import math
 import numpy as np
+
+from PIL import Image
 
 from parameters import GrParams
 
@@ -131,6 +134,53 @@ def am_img_mat(imgs):
     img_mat = np.concatenate((start_img_col, backprop_img_col, empty_col, fmap_col), axis=1)
 
     return img_mat
+
+
+def fmap_img_mat(imgs):
+    """Returns a matrix of feature-map images in the form of np.array."""
+    n_imgs = len(imgs)
+    h = math.log(n_imgs, 2) // 2
+    w = n_imgs // h
+
+    assert h * w == n_imgs
+
+    col_set = []
+    for i in range(h):
+        col = np.concatenate(imgs[i * w : (i+1) * w], axis=0)
+        col_set.append(col)
+
+    img_mat = np.concatenate(col_set, axis=1)
+    
+    return img_mat
+
+
+def get_real_img_from_path(path: str):
+    """Returns image tensor and image id from RGB image path.
+    
+    Format of <path>:
+        - '..\\<left/right>\\<img_id>_<img_type>.png'
+        - <img_type> could be 'mask', 'rgb', 'depth', etc.
+    """
+    # Handling image file name
+    subdir = path.split('\\')[-2]  # 'left' or 'right'
+    file_name = path.split('\\')[-1]
+    id = file_name[:-7]
+
+    # Loading rgb and depth image
+    img_rgb = np.array(Image.open(path))
+    img_d_name = id + 'mask.png'
+    img_d_path = os.path.join(params.DATA_PATH, subdir, img_d_name)
+    img_d = np.array(Image.open(img_d_path))
+
+    # Combine rgb and depth image
+    img_d = np.expand_dims(img_d, 2)
+    img = np.concatenate((img_rgb, img_d), axis=2)
+    # Move color channel to match model requirement
+    img = np.moveaxis(img, -1, 0)
+    img = np.expand_dims(img, 0)
+    img = torch.tensor(img, dtype=torch.float32).to(params.DEVICE)
+
+    return img, id
 
 
 # ===================================

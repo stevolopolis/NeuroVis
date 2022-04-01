@@ -29,14 +29,19 @@ class GrParams:
         self.LR = 1e-1
         self.INIT_METHOD = 'noise'  # or 'zero'
 
+        # FMAP params
+        self.FMAP_LAYER = 'conv3'
+
         # Kernel params
         self.N_KERNELS = 32
         self.INIT_METHOD = 'noise'
         self.vis_layers = ['conv1', 'conv2', 'conv3', 'res1', 'res2', 'res3']
 
         # Paths params
-        self.PATH = 'kernel-am-grasp-pixel'
+        self.AM_PATH = 'kernel-am-grasp-pixel'
+        self.FMAP_PATH = 'feature-map'
         self.MODEL_PATH = 'trained-models/epoch_19_iou_0.98'
+        self.DATA_PATH = 'datasets/merge'
 
         # Visualization params
         self.vis_img_size = (224, 224)

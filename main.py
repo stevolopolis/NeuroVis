@@ -25,6 +25,7 @@ params = GrParams()
 # Path class for managing required directories
 # gr-convnet / resnet18 / vgg16
 paths = GrPath('gr-convnet')
+GrPath.create_am_path()
 
 # Load trained gr-convnet model
 model = torch.load(params.MODEL_PATH, map_location=params.DEVICE)
