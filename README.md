@@ -23,6 +23,12 @@ However, till this day, the inner-workings of these powerful neural networks are
 NeuroVis tries to tackle this problem from a different perspective.
 
 ## Activation Maximization
+![AM-example](/media/conv1_0.png)
+The format of each AM visualization matrix is as follows:
+| | | | |
+|---|---|---|---|
+| Initial image (rgb) | AM result (rgb) | - | target feature map | 
+| Initial image (depth) | AM result (depth) | - | Resulting feature map
 
 ## Group AM
 
