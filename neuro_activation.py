@@ -34,8 +34,6 @@ dataLoader = DataLoader()
 # AM visualization
 for vis_layer in params.vis_layers:
     print('Visualizing for %s layer' % vis_layer)
-    # Create sub-directory for chosen layer
-    paths.create_layer_paths(vis_layer)
 
     # AM on individual kernels
     for kernel_idx in range(params.N_KERNELS):
@@ -51,5 +49,4 @@ for vis_layer in params.vis_layers:
             # Save act. map
             act_map_arr = tensor2array(act_map)
             act_img = array2img(act_map_arr)
-            print(act_img.shape)
             cv2.imwrite(save_img_path, act_img)
