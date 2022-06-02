@@ -35,7 +35,7 @@ class GrParams:
         # Kernel params
         self.N_KERNELS = 32
         self.INIT_METHOD = 'noise'
-        self.vis_layers = ['conv1', 'conv2', 'conv3', 'res1', 'res2', 'res3']
+        self.vis_layers = ['conv3', 'res1', 'res2', 'res3']
 
         # Paths params
         self.AM_PATH = 'kernel-am-grasp-pixel'

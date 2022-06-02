@@ -35,6 +35,7 @@ class GrPath:
 
         # Swith main operating path to self.am_path
         self.main_path = self.am_path
+        self.save_subdir = os.path.join('vis', self.main_path)
 
     def create_act_path(self):
         """This method creates a subdirectory in <vis> for neuron activation
@@ -48,6 +49,7 @@ class GrPath:
 
         # Swith main operating path to self.act_path
         self.main_path = self.act_path
+        self.save_subdir = os.path.join('vis', self.main_path)
     
     def create_layer_paths(self, layer: str):
         """This method creates sub-directory in <self.am_path> for a specific layer."""
