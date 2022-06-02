@@ -24,6 +24,7 @@ NeuroVis tries to tackle this problem from a different perspective.
 
 ## Activation Maximization
 ![AM-example](/media/conv1_0.png)
+*AM visualization matrix of the 1st layer and 0th kernel.*
 The format of each AM visualization matrix is as follows:
 | | | | |
 |---|---|---|---|
@@ -31,6 +32,8 @@ The format of each AM visualization matrix is as follows:
 | Initial image (depth) | AM result (depth) | - | Resulting feature map
 
 ## Neuron Activation Maps
+![Neuron Activation Map of Conv3 Layer](/media/0_1ec297183c8aa37a36c7d12bccd8bbd__conv3_0.png)
+*Activation map of the 3rd Conv layer 0th kernel. (Black: low activation; White: is high activation. )*
 
 
 ## Saliency Maps
