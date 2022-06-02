@@ -19,7 +19,7 @@ class GrPath:
     def __init__(self, net: str):
         self.net = net
         self.am_path = params.AM_PATH
-        self.fmap_path = params.FMAP_PATH
+        self.act_path = params.ACT_PATH
 
         # self.main_path determines the path of concern in the current use case
         self.main_path = self.am_path
@@ -36,17 +36,18 @@ class GrPath:
         # Swith main operating path to self.am_path
         self.main_path = self.am_path
 
-    def create_fmap_path(self):
-        """This method creates a subdirectory in <vis> for feature map visualization.
+    def create_act_path(self):
+        """This method creates a subdirectory in <vis> for neuron activation
+        visualization.
         
-        Feature maps include those generated from real images and synthetic images
+        Activation Maps includes those generated from real images and synthetic images
         (e.g. synthetic rectangular boxes).
         """
-        if self.fmap_path not in os.listdir('vis'):
-            os.makedirs(os.path.join('vis', self.fmap_path))
+        if self.act_path not in os.listdir('vis'):
+            os.makedirs(os.path.join('vis', self.act_path))
 
-        # Swith main operating path to self.fmap_path
-        self.main_path = self.fmap_path
+        # Swith main operating path to self.act_path
+        self.main_path = self.act_path
     
     def create_layer_paths(self, layer: str):
         """This method creates sub-directory in <self.am_path> for a specific layer."""
