@@ -30,8 +30,7 @@ The format of each AM visualization matrix is as follows:
 | Initial image (rgb) | AM result (rgb) | - | target feature map | 
 | Initial image (depth) | AM result (depth) | - | Resulting feature map
 
-## Group AM
+## Neuron Activation Maps
 
-## Feature Map visualization
 
-## Kernel Ranking
+## Saliency Maps
