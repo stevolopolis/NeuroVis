@@ -39,7 +39,7 @@ for vis_layer in params.vis_layers:
     for kernel_idx in range(params.N_KERNELS):
         print('Visualizing Kernel INDEX: %s' % kernel_idx)
         # Create submodel with output = selected kernel
-        ext_model = ExtractModel(model, vis_layer, net_type=params.net, device=params.DEVICE)
+        ext_model = ExtractModel(model, vis_layer, net_type=params.net)
         # Load Cornell Dataset images
         for img, img_id in dataLoader.load_rgbd():
             save_img_path = '%s/%s_%s_%s.png' % (paths.save_subdir, img_id, vis_layer, kernel_idx)

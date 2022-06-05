@@ -42,7 +42,7 @@ for vis_layer in params.vis_layers:
         save_img_path = '%s/%s_%s.png' % (paths.save_subdir, vis_layer, kernel_idx)
 
         # Create submodel with output = selected kernel
-        ext_model = ExtractModel(model, vis_layer, net_type=params.net, device=params.DEVICE)
+        ext_model = ExtractModel(model, vis_layer, net_type=params.net)
         am_func = ActivationMaximization(ext_model, params.IMG_SIZE, params.LR,
                                          params.EPOCHS, params.INIT_METHOD, params.DEVICE)
         # Run Activation Maximization
