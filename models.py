@@ -15,9 +15,8 @@ class ExtractModel(nn.Module):
         - vgg16
         - gr-convnet
     """
-    def __init__(self, model, layer, net_type='gr-convnet', device='cuda'):
+    def __init__(self, model, layer, net_type='gr-convnet'):
         super().__init__()
-        self.output_layer_name = layer
         self.children_list = []
 
         # for VGG
@@ -30,10 +29,23 @@ class ExtractModel(nn.Module):
         elif net_type == 'gr-convnet':
             for n,c in model.named_children():
                 self.children_list.append(c)
-                #if n[:2] == 'bn':
-                #    self.children_list.append(nn.ReLU())
+                if n[:2] == 'bn':
+                    self.children_list.append(nn.ReLU())  # ****Very Important******
                 if n == layer:
                     break
+        elif net_type == 'gr-convnet-sin':
+            prev_c = None
+            for n,c in model.named_children():
+                if n in ['pos_output', 'cos_output', 'width_output', 'dropout_cos', 'dropout_pos', 'dropout_wid']:
+                    continue
+                elif n == 'sin_output':
+                    prev_c = c
+                    continue
+                self.children_list.append(c)
+                if prev_c is not None:
+                    self.children_list.append(prev_c)
+                if n[:2] == 'bn':
+                    self.children_list.append(nn.ReLU())  # ****Very Important******
         # for resnet18
         elif net_type == 'resnet18':
             for n, c in model.named_children():
@@ -41,7 +53,7 @@ class ExtractModel(nn.Module):
                 if n == layer:
                     break
         
-        self.net = nn.Sequential(*self.children_list).to(device)
+        self.net = nn.Sequential(*self.children_list)
         
     def forward(self, x):
         x = self.net(x)
@@ -55,9 +67,9 @@ class ExtractOutputModel(nn.Module):
     The current code is based on the architecture and indexing of 
     'gr-convnet'.
     """
-    def __init__(self, model, output, device='cuda'):
+    def __init__(self, model, output):
         super().__init__()
-        self.net = model.to(device)
+        self.net = model
 
         if output == 'width':
             self.idx = 3

@@ -24,7 +24,8 @@ class GrParams:
         self.DEVICE = torch.device('cuda') if torch.cuda.is_available \
                                       else torch.device('cpu')
         # AM params
-        self.IMG_SIZE = (4, 64, 64) 
+        self.OUTPUT_SIZE = 224
+        self.IMG_SIZE = (4, self.OUTPUT_SIZE, self.OUTPUT_SIZE) 
         self.EPOCHS = 251
         self.LR = 1e-1
         self.INIT_METHOD = 'noise'  # or 'zero'

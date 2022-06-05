@@ -59,7 +59,7 @@ class GrPath:
         gradients. There is also the option to multiple gradients to the 
         values of the image itself for 'better clarity'.
         """
-        if self.act_path not in os.listdir('vis'):
+        if self.grad_path not in os.listdir('vis'):
             os.makedirs(os.path.join('vis', self.grad_path))
 
         # Swith main operating path to self.act_path

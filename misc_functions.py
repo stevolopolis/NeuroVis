@@ -13,6 +13,10 @@ import torch
 from torch.autograd import Variable
 from torchvision import models
 
+from parameters import GrParams
+
+params = GrParams()
+
 
 def convert_to_grayscale(im_as_arr):
     """
@@ -40,13 +44,12 @@ def save_gradient_images(gradient, file_name):
         gradient (np arr): Numpy array of the gradient with shape (3, 224, 224)
         file_name (str): File name to be exported
     """
-    if not os.path.exists('../results'):
-        os.makedirs('../results')
     # Normalize
     gradient = gradient - gradient.min()
     gradient /= gradient.max()
     # Save image
-    path_to_file = os.path.join('../results', file_name + '.jpg')
+    save_dir = os.path.join('vis', params.GRAD_PATH)
+    path_to_file = os.path.join(save_dir, file_name + '.png')
     save_image(gradient, path_to_file)
 
 
