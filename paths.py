@@ -20,6 +20,7 @@ class GrPath:
         self.net = net
         self.am_path = params.AM_PATH
         self.act_path = params.ACT_PATH
+        self.grad_path = params.GRAD_PATH
 
         # self.main_path determines the path of concern in the current use case
         self.main_path = self.am_path
@@ -49,6 +50,20 @@ class GrPath:
 
         # Swith main operating path to self.act_path
         self.main_path = self.act_path
+        self.save_subdir = os.path.join('vis', self.main_path)
+
+    def create_grad_path(self):
+        """This method creates a subdirectory in <vis> for saliency maps.
+
+        Saliency maps are generated from vanila gradients or integrated
+        gradients. There is also the option to multiple gradients to the 
+        values of the image itself for 'better clarity'.
+        """
+        if self.act_path not in os.listdir('vis'):
+            os.makedirs(os.path.join('vis', self.grad_path))
+
+        # Swith main operating path to self.act_path
+        self.main_path = self.grad_path
         self.save_subdir = os.path.join('vis', self.main_path)
     
     def create_layer_paths(self, layer: str):

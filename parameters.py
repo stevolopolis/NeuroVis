@@ -40,6 +40,7 @@ class GrParams:
         # Paths params
         self.AM_PATH = 'kernel-am-grasp-pixel'
         self.ACT_PATH = 'neuro-activation'
+        self.GRAD_PATH = 'saliency'
         self.MODEL_PATH = 'trained-models/epoch_19_iou_0.98'
         self.DATA_PATH = 'datasets/merge'
 

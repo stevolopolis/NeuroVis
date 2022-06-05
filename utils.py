@@ -232,4 +232,3 @@ def get_variations_per_angle(rank, allow_neg=True):
     else:
         n_vars_per_angle = n_vars // 9
     return n_vars_per_angle
-        

@@ -43,6 +43,30 @@ class ExtractModel(nn.Module):
         
         self.net = nn.Sequential(*self.children_list).to(device)
         
-    def forward(self,x):
+    def forward(self, x):
         x = self.net(x)
         return x
+
+
+class ExtractOutputModel(nn.Module):
+    """This class extracts a pretrained grasping model such
+    that only a particular output in a set of outputs is returned.
+    
+    The current code is based on the architecture and indexing of 
+    'gr-convnet'.
+    """
+    def __init__(self, model, output, device='cuda'):
+        super().__init__()
+        self.net = model.to(device)
+
+        if output == 'width':
+            self.idx = 3
+        elif output == 'cos':
+            self.idx = 1   
+        elif output == 'sin':
+            self.idx = 2
+        elif output == 'quality':
+            self.idx = 0
+
+    def forward(self, x):
+        return self.net(x)[self.idx]
