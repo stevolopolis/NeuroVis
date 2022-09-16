@@ -18,6 +18,33 @@ params = GrParams()
 
 
 # ===================================
+# Image augmentation
+# ===================================
+class AddGaussianNoise(torch.nn.Module):
+    """Gaussian noise augmentation fn used in DataLoader class."""
+    def __init__(self, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+        
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
+
+
+# ======================================
+# Model properties
+# =========================================
+def get_layer_width(model):
+    dummy_x = torch.randn((1, params.IMG_SIZE[0], params.IMG_SIZE[1], params.IMG_SIZE[2]))
+    out = model(dummy_x)
+    layer_width = out.shape[1]  # (batch_size, n_kernels, img_dim[0], img_dim[1])
+
+    return layer_width
+
+
+# ===================================
 # Tensor to image processing
 # ===================================
 def tensor2array(tensor):
@@ -36,7 +63,7 @@ def tensor2array(tensor):
     return img[0]
 
 
-def array2img(img):
+def array2img(img, interpolation=cv2.INTER_AREA, size=params.vis_img_size):
     """Returns numpy arrays compatible for cv2 visualization."""
     # normalization for vgg/resnet
     if params.net in ['vgg16', 'resnet18']:
@@ -47,7 +74,7 @@ def array2img(img):
     img = np.moveaxis(img, 0, 2)
 
     # resize for small images
-    img = cv2.resize(img, params.vis_img_size, interpolation=cv2.INTER_LINEAR)
+    img = cv2.resize(img, size, interpolation=interpolation)
 
     return img.astype(int)
 
@@ -68,6 +95,18 @@ def expand_2d_img(img):
     img = np.moveaxis(img, 0, -1)
 
     return img
+
+
+def tensor2img(img, interpolation=cv2.INTER_AREA):
+    """Returns rgb-image and depth-image given tensor"""
+    img = tensor2array(img)
+    img = array2img(img, interpolation)
+    if img.shape[2] == 4:
+        rgb, d = slice_img(img)
+        d = expand_2d_img(d)
+        return rgb, d
+    else:
+        return img, img
 
 
 def imagenet_norm(img):
@@ -103,6 +142,7 @@ def pixel_range_norm(img):
 
     # Scale pixel range to be bewteen 0 and 255.
     img = img * 255
+    img = np.clip(img, 0, 255)
     
     return img
 
@@ -110,28 +150,27 @@ def pixel_range_norm(img):
 # ===================================
 # Image processing
 # ===================================
-def am_img_mat(imgs):
+def am_img_mat(pixel_set, full_set):
     """Return a 2x3 (2x4 including empty col) matrix of images.
 
     Each element in imgs has the shape: (h, w, 3)
     
     Parameters:
-        - imgs[0]: <start_img_rgb>
-        - imgs[1]: <start_img_d>
-        - imgs[2]: <backprop_img_rgb>
-        - imgs[3]: <backprop_img_d>
-        - imgs[4]: <target_img>
-        - imgs[5]: <fmap_img>
+        - set[0]: <start_img_rgb>
+        - set[1]: <start_img_d>
+        - set[2]: <backprop_img_rgb>
+        - set[3]: <backprop_img_d>
+        - set[4]: <fmap_img>
+        - set[5]: <target_img>
     """
     col_h = params.vis_img_size[0] * 2
     col_w = params.vis_img_size[1]
 
-    start_img_col = np.concatenate((imgs[0], imgs[1]), axis=0)
-    backprop_img_col = np.concatenate((imgs[2], imgs[3]), axis=0)
-    empty_col = np.zeros((col_h, col_w, 3))
-    fmap_col = np.concatenate((imgs[4], imgs[5]), axis=0)
+    start_col = np.concatenate((pixel_set[0], pixel_set[1], full_set[0], full_set[1]), axis=0)
+    backprop_col = np.concatenate((pixel_set[2], pixel_set[3], full_set[2], full_set[3]), axis=0)
+    fmap_col = np.concatenate((pixel_set[4], pixel_set[5], full_set[4], full_set[5]), axis=0)
 
-    img_mat = np.concatenate((start_img_col, backprop_img_col, empty_col, fmap_col), axis=1)
+    img_mat = np.concatenate((start_col, backprop_col, fmap_col), axis=1)
 
     return img_mat
 

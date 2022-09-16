@@ -10,12 +10,15 @@ This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
 import torch
 import cv2
+import os
 
 from parameters import GrParams
 from paths import GrPath
-from models import ExtractModel
-from data import DataLoader
-from utils import tensor2array, array2img
+from models import ExtractModel, ExtractAlexModel, AlexnetModel
+from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
+from data import DataLoader, ClsDataLoader
+from data_v2 import DataLoaderV2
+from utils import tensor2array, array2img, tensor2img, get_layer_width
 
 # Params class containing parameters for all visualization.
 params = GrParams()
@@ -25,28 +28,55 @@ paths = GrPath('gr-convnet')
 paths.create_act_path()
 
 # Load trained gr-convnet model
-model = torch.load(params.MODEL_PATH, map_location=params.DEVICE)
-model.eval()
+model = params.MODEL
 
-# DataLoader for Cornell Dataset
-dataLoader = DataLoader()
+# Select data for visualization
+data = []
+# DataLoader
+#dataLoader = ClsDataLoader(randomize=True)
+#dataLoader = GraspDataLoader(randomize=True)
+# AlexnetGrasp_v5
+dataLoader = DataLoaderV2('datasets/top_5_compressed_paperspace/test', 1)
+for i, datum in enumerate(dataLoader.load_grasp()):
+    if i >= params.N_IMG:
+        break
+    data.append(datum)
 
-# AM visualization
+# Generating neuro activations (feature maps)
 for vis_layer in params.vis_layers:
     print('Visualizing for %s layer' % vis_layer)
 
-    # AM on individual kernels
-    for kernel_idx in range(params.N_KERNELS):
+    # Create sub-directory for chosen layer
+    paths.create_layer_paths(vis_layer)
+
+    # Create submodel with output = selected kernel
+    # gr-convnet
+    #ext_model = ExtractModel(model, vis_layer, net_type=params.net)
+    # alexCLS
+    #ext_model = ExtractAlexModel(model, vis_layer, net_type=params.net)
+    #ext_model = AlexnetModel(model, vis_layer, net_type=params.net)
+    # AlexnetGrasp_v5
+    #ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
+    ext_model = AlexnetMapFeatures(model, vis_layer)
+    n_kernels = get_layer_width(ext_model)
+
+    for kernel_idx in range(n_kernels):
         print('Visualizing Kernel INDEX: %s' % kernel_idx)
-        # Create submodel with output = selected kernel
-        ext_model = ExtractModel(model, vis_layer, net_type=params.net)
-        # Load Cornell Dataset images
-        for img, img_id in dataLoader.load_rgbd():
-            save_img_path = '%s/%s_%s_%s.png' % (paths.save_subdir, img_id, vis_layer, kernel_idx)
+        
+        # Create sub-directory for chosen kernel
+        paths.create_kernel_paths(vis_layer, str(kernel_idx))
+
+        # AlexnetGrasp_v5
+        for img, map, img_id in data:
+            save_img_path = '%s/%s_%s_%s_neuro_activation.png' % (paths.save_subdir, img_id, vis_layer, kernel_idx)
             # Feed image model and get act. map
             output = ext_model(img)
             act_map = output[0, kernel_idx]
             # Save act. map
             act_map_arr = tensor2array(act_map)
-            act_img = array2img(act_map_arr)
+            act_img = array2img(act_map_arr, cv2.INTER_LINEAR, (64, 64))
             cv2.imwrite(save_img_path, act_img)
+            # Save original image
+            save_img_rgb, save_img_d = tensor2img(img)
+            if '%s_image.png' % img_id not in os.listdir(os.path.join(paths.vis_path, paths.main_path)):
+                cv2.imwrite(os.path.join(paths.vis_path, paths.main_path, '%s_image.png' % img_id), save_img_rgb)

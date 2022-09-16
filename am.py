@@ -16,10 +16,12 @@ The class also creates a 2x3 image matrix that contains:
 """
 
 import torch 
-import cv2 as cv
+import cv2
+import torch.nn.functional as F
 from torchvision import transforms
-from utils import array2img, tensor2array, slice_img, expand_2d_img
+from utils import tensor2img
 
+from am_regularizers import LPLoss, TVLoss
 from parameters import GrParams
 
 params = GrParams()
@@ -42,8 +44,9 @@ class ActivationMaximization():
                  init_method='noise', device='cuda'):
         self.model = model
         self.img_size = (1, img_size[0], img_size[1], img_size[2])
+        self.device = device
 
-        # Initialize image with gaussian noise
+        """# Initialize image with gaussian noise
         if params.INIT_METHOD == 'noise':
             # image initialization for gr-convnet (4 channels)
             if params.net == 'gr-convnet':
@@ -60,10 +63,8 @@ class ActivationMaximization():
             self.backprop = torch.full(self.img_size, 1e-4,
                                        dtype=torch.float32,
                                        requires_grad=True,
-                                       device=device)
+                                       device=device)"""
 
-        # Copy start image for saving as jpg
-        self.start = self.backprop.clone()
         self.lr = lr
         self.epochs = epochs
         self.loss = torch.tensor(0.0)
@@ -71,12 +72,21 @@ class ActivationMaximization():
         # Preprocessing pipeline for torch.models
         # Not applicable for 'gr-convnet'
         self.preprocess = transforms.Compose([
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        #transforms.Grayscale(num_output_channels=3)
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-        self.optim = torch.optim.Adam([self.backprop], lr=lr, weight_decay=1e-6)
+        #self.optim = torch.optim.Adam([self.backprop], lr=lr, weight_decay=1e-6)
 
-    def backprop_full(self, kernel_idx, alpha=1, beta=1, sigma=1, p=1):
+    def am(self, kernel_idx):
+        pixel_start, pixel_backprop, pixel_fmap, pixel_target = self.backprop_pixel(kernel_idx)
+        full_start, full_backprop, full_fmap, full_target = self.backprop_full(kernel_idx)
+        pixel_result_set = self.process_results(pixel_start, pixel_backprop, pixel_fmap, pixel_target)
+        full_result_set = self.process_results(full_start, full_backprop, full_fmap, full_target)
+       
+        return pixel_result_set, full_result_set
+
+    def backprop_full(self, kernel_idx, alpha=.1, beta=.1, p=2):
         """Implements AM on <self.backprop_img> on a selected kernel.
 
         Parameters:
@@ -86,73 +96,125 @@ class ActivationMaximization():
             - sigma: weight for jitter loss
             - p: raising power for LP loss
         """
+        if params.INIT_METHOD == 'noise':
+            backprop =  torch.randn(self.img_size, dtype=torch.float32,
+                                    requires_grad=True, device=self.device)
+        elif params.INIT_METHOD == 'zero':
+            backprop =  torch.full(self.img_size, 0.0, dtype=torch.float32,
+                                    requires_grad=True, device=self.device)
+        start = backprop.detach().clone()
+        optim = torch.optim.SGD([backprop], lr=self.lr, momentum=0.99)
+
         for _ in range(self.epochs):
-            self.optim.zero_grad()
+            optim.zero_grad()
 
             # for vgg / resnet
             if params.net in ('vgg16', 'resnet18'):
-                input = self.preprocess(self.backprop.squeeze()).unsqueeze(0)
+                input = self.preprocess(backprop.squeeze()).unsqueeze(0)
             # for gr-convnet
             elif params.net == 'gr-convnet':
-                input = self.backprop
+                input = backprop
+            
+            output = self.model(input)
+            fmap_output = output[0, kernel_idx]
 
-            self.output = self.model(input)
-            self.fmap_output = self.output[0, kernel_idx]
+            pixel_loss = -torch.sum(fmap_output) \
+                            + TVLoss(backprop) * beta \
+                            + LPLoss(fmap_output, p=p) * alpha
+            loss = pixel_loss
 
-            pixel_loss = -torch.mean(self.fmap_output)
-            self.loss = pixel_loss
-
-            self.loss.backward()
-            self.optim.step()
+            loss.backward()
+            optim.step()
 
         # Target feature map with maxed out pixel values
-        self.target = torch.ones(self.fmap_output.shape)
+        target = torch.ones(fmap_output.shape)
+        target[0][0] = 0
 
         # Display AM loss
-        self.show_loss()
+        self.show_loss(loss)
+
+        return start, backprop, fmap_output, target
 
     def backprop_pixel(self, kernel_idx):
         """Implements pixel-AM on <self.backprop_img> on a selected kernel.
 
         Pixel-AM is done by calculating losses on 1 center pixel.
         """
+        if params.INIT_METHOD == 'noise':
+            backprop =  torch.randn(self.img_size, dtype=torch.float32,
+                                    requires_grad=True, device=self.device)
+        elif params.INIT_METHOD == 'zero':
+            backprop =  torch.full(self.img_size, 0.0, dtype=torch.float32,
+                                    requires_grad=True, device=self.device)
+        start = backprop.detach().clone()
+        optim = torch.optim.SGD([backprop], lr=self.lr, momentum=0.99)
+
         for _ in range(self.epochs):
-            self.optim.zero_grad()
+            optim.zero_grad()
 
             # for vgg / resnet
             if params.net in ('vgg16', 'resnet18'):
-                input = self.preprocess(self.backprop.squeeze()).unsqueeze(0)
+                input = self.preprocess(backprop.squeeze()).unsqueeze(0)
             # for gr-convnet
             elif params.net == 'gr-convnet':
-                input = self.backprop
+                input = backprop
 
-            self.output = self.model(input)
-            self.fmap_output = self.output[0, kernel_idx]
+            output = self.model(input)
+            fmap_output = output[0, kernel_idx]
             
             # Getting center coordinate of feature map
-            h = self.fmap_output.shape[0]
-            w = self.fmap_output.shape[1]
+            h = fmap_output.shape[0]
+            w = fmap_output.shape[1]
             x_mid = w // 2
             y_mid = h // 2
 
-            self.loss = -torch.mean(self.fmap_output[y_mid, x_mid])
+            loss = - fmap_output[y_mid, x_mid]
 
-            self.loss.backward()
-            self.optim.step()
+            loss.backward()
+            optim.step()
 
         # Target feature map with maxed out pixel values
-        self.target = torch.zeros(self.fmap_output.shape)
-        self.target[y_mid, x_mid] = 1.0
+        target = torch.zeros(fmap_output.shape)
+        target[y_mid, x_mid] = 1.0
 
         # Display AM loss
-        self.show_loss()
+        self.show_loss(loss)
 
-    def show_loss(self):
+        return start, backprop, fmap_output, target
+
+    def backprop_pred(self, idx):
+        if params.INIT_METHOD == 'noise':
+                backprop =  torch.randn(self.img_size, dtype=torch.float32,
+                                        requires_grad=True, device=self.device)
+        elif params.INIT_METHOD == 'zero':
+            backprop =  torch.full(self.img_size, 0.0, dtype=torch.float32,
+                                    requires_grad=True, device=self.device)
+        start = backprop.detach().clone()
+        optim = torch.optim.SGD([backprop], lr=self.lr, momentum=0.99)
+
+        for _ in range(self.epochs):
+            optim.zero_grad()
+            output = self.model(backprop)
+            #output = self.model(self.preprocess(backprop))
+            #output = F.softmax(output, dim=1)
+            # [0.2437, 0.4653, 0.6458, 0.0907, 0.3221]
+            loss = - output[0][idx]
+            #loss = F.mse_loss(output, torch.tensor([[0.2437, 0.4653, 0.6458, 0.0907, 0.3221]]).to(params.DEVICE))
+            
+            loss.backward()
+            optim.step()
+
+        # Display AM loss
+        self.show_loss(loss)
+
+        return start, backprop
+
+    def show_loss(self, loss):
         """Print loss value for current backprop step."""
-        rounded_loss = round(self.loss.item(), 5)
+        rounded_loss = round(loss.item(), 5)
         print('Epoch: %s\t Loss: %s' % (self.epochs, rounded_loss))
 
-    def show_am(self):
+    def process_results(self, start, backprop, fmap_output, target):
         """Return a tuple of 6 images after AM is run.
 
         Return images:
@@ -164,24 +226,11 @@ class ActivationMaximization():
             - output: image of feature map of selected kernel
         """
         # Convert tensors to images compatible for cv2.imshow/cv2.imwrite
-        start_img = tensor2array(self.start)
-        backprop_img = tensor2array(self.backprop)
-        target_img = tensor2array(self.target)
-        fmap_img = tensor2array(self.fmap_output)
-
-        # for gr-convnet
-        start_img = array2img(start_img)
-        backprop_img = array2img(backprop_img)
-        target_img = array2img(target_img)
-        fmap_img = array2img(fmap_img)
-
-        # Slice up 4D input image into RGB and Depth when
-        # network under visualization is "gr-convnet"
-        if params.net == 'gr-convnet':
-            start_img_rgb, start_img_d = slice_img(start_img)
-            backprop_img_rgb, backprop_img_d = slice_img(backprop_img)
+        start_rgb, start_d = tensor2img(start, cv2.INTER_LINEAR)
+        backprop_rgb, backprop_d = tensor2img(backprop, cv2.INTER_LINEAR)
+        target, _ = tensor2img(target)
+        fmap, _ = tensor2img(fmap_output)
         
-        # expand_2d_img() is called for 2D-arrays with shape (h, w)
-        return start_img_rgb, expand_2d_img(start_img_d), \
-               backprop_img_rgb, expand_2d_img(backprop_img_d), \
-               target_img, fmap_img
+        return start_rgb, start_d, \
+                backprop_rgb, backprop_d, \
+                target, fmap

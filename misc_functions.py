@@ -36,7 +36,7 @@ def convert_to_grayscale(im_as_arr):
     return grayscale_im
 
 
-def save_gradient_images(gradient, file_name):
+def save_gradient_images(gradient, folder_name, file_name):
     """
         Exports the original gradient image
 
@@ -48,8 +48,7 @@ def save_gradient_images(gradient, file_name):
     gradient = gradient - gradient.min()
     gradient /= gradient.max()
     # Save image
-    save_dir = os.path.join('vis', params.GRAD_PATH)
-    path_to_file = os.path.join(save_dir, file_name + '.png')
+    path_to_file = os.path.join(folder_name, file_name + '.png')
     save_image(gradient, path_to_file)
 
 
