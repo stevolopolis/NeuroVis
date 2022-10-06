@@ -10,16 +10,15 @@ import os
 import shutil
 import glob
 
-from parameters import GrParams
+from parameters import Params
 
-params = GrParams()
+params = Params()
 
-class GrPath:
+class Path:
     """This class prepares the directories for saving AM results
     in the <vis> folder.
     """
-    def __init__(self, net: str):
-        self.net = net
+    def __init__(self):
         self.model_name = params.MODEL_NAME
         self.vis_path = params.VIS_PATH
         self.am_path = params.AM_PATH
