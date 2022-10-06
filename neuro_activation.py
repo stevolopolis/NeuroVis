@@ -8,23 +8,19 @@ The images are saved in the <datasets> folder.
 
 This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
-import torch
 import cv2
 import os
 
-from parameters import GrParams
-from paths import GrPath
-from models import ExtractModel, ExtractAlexModel, AlexnetModel
+from parameters import Params
+from paths import Path
 from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
-from data import DataLoader, ClsDataLoader
 from data_v2 import DataLoaderV2
 from utils import tensor2array, array2img, tensor2img, get_layer_width
 
 # Params class containing parameters for all visualization.
-params = GrParams()
+params = Params()
 # Path class for managing required directories
-# gr-convnet / resnet18 / vgg16
-paths = GrPath('gr-convnet')
+paths = Path()
 paths.create_act_path()
 
 # Load trained gr-convnet model
@@ -33,9 +29,6 @@ model = params.MODEL
 # Select data for visualization
 data = []
 # DataLoader
-#dataLoader = ClsDataLoader(randomize=True)
-#dataLoader = GraspDataLoader(randomize=True)
-# AlexnetGrasp_v5
 dataLoader = DataLoaderV2('datasets/top_5_compressed_paperspace/test', 1)
 for i, datum in enumerate(dataLoader.load_grasp()):
     if i >= params.N_IMG:
@@ -50,14 +43,9 @@ for vis_layer in params.vis_layers:
     paths.create_layer_paths(vis_layer)
 
     # Create submodel with output = selected kernel
-    # gr-convnet
-    #ext_model = ExtractModel(model, vis_layer, net_type=params.net)
-    # alexCLS
-    #ext_model = ExtractAlexModel(model, vis_layer, net_type=params.net)
-    #ext_model = AlexnetModel(model, vis_layer, net_type=params.net)
     # AlexnetGrasp_v5
-    #ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
-    ext_model = AlexnetMapFeatures(model, vis_layer)
+    ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
+    #ext_model = AlexnetMapFeatures(model, vis_layer)
     n_kernels = get_layer_width(ext_model)
 
     for kernel_idx in range(n_kernels):
@@ -70,7 +58,12 @@ for vis_layer in params.vis_layers:
         for img, map, img_id in data:
             save_img_path = '%s/%s_%s_%s_neuro_activation.png' % (paths.save_subdir, img_id, vis_layer, kernel_idx)
             # Feed image model and get act. map
-            output = ext_model(img)
+            
+            for vis_layer in range(20):
+                #ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
+                ext_model = AlexnetMapFeatures(model, str(vis_layer))
+                output = ext_model(img)
+
             act_map = output[0, kernel_idx]
             # Save act. map
             act_map_arr = tensor2array(act_map)

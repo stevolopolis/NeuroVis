@@ -14,7 +14,7 @@ This file is Copyright (c) 2022 Steven Tin Sui Luo.
 import cv2
 
 from parameters import Params
-from paths import GrPath
+from paths import Path
 from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
 from am import ActivationMaximization
 from utils import am_img_mat, get_layer_width
@@ -23,7 +23,7 @@ from utils import am_img_mat, get_layer_width
 params = Params()
 # Path class for managing required directories
 # gr-convnet / resnet18 / vgg16
-paths = GrPath('gr-convnet')
+paths = Path()
 paths.create_am_path()
 
 # Trained model paths
