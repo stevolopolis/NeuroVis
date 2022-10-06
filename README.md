@@ -19,11 +19,17 @@ Besides the conventional methods such as Activation Maximization (AM) and its va
 
 ```main_am.py``` - run vanilla gradient ascent on selected neuron (kernel in CNN).
 
-```neuro_activation.py``` - 
+```main_activation.py``` - visualize output of selected neuron (kernel in CNN).
 
-```am_guided_backprop.py```
+```main_guided_backprop.py``` - run guided backpropagation on selected neuron (kernel in CNN).
 
-```integrated_grad.py```
+```main_integrated_grad.py``` - run integrated gradients on selected neuron (kerenl in CNN).
+
+## To add new visualization techniques
+
+Create two files:
+1. ```<methodName>.py``` - class/function for running the visualization method.
+2. ```main_<methodName>.py``` - file for running the visualization method with custom inputs.
 
 
 ## Background
