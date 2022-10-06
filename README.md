@@ -9,10 +9,22 @@ Besides the conventional methods such as Activation Maximization (AM) and its va
 
 ## Tables of Content
 * [Background](#background)
+* [Files to interact with](#files)
 * [Activation Maximization](#activation-maximization)
 * [Group AM](#group-am)
 * [Feature Map Visualization](#feature-map-visualization)
 * [Kernel Ranking](#kernel-ranking)
+
+## Files to interact with
+
+```main_am.py```
+
+```neuro_activation.py```
+
+```am_guided_backprop.py```
+
+```integrated_grad.py```
+
 
 ## Background
 
