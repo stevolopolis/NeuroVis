@@ -2,30 +2,22 @@
 This file contains the parameters for different sorts of AM
 implementation in this repository.
 
-Parameters are mainly divided into different parts based on
-the network under investigation:
-    - gr-convnet
-    - resnet18
-    - vgg16
-
 This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
+
 import torch
 import os
 
-from torchvision.models import alexnet
+from inference.models.alexnet import AlexnetMap_v5
 
-from inference.models.grconvnet_cls import GrCLS
-from inference.models.alexnet import AlexNet, PretrainedAlexnet, myAlexNet, AlexnetMap_v5
-
-class GrParams:
+class Params:
     """
-    Parameters for AM visualization on gr-convnet
+    Parameters for visualization of model.
     """
     def __init__(self):
         # network name
         self.net = 'gr-convnet'
-        self.MODEL_NAME = 'alexnetGrasp_grasp_top5_v110_epoch150'
+        self.MODEL_NAME = 'alexnetGrasp_cls_top5_v100_epoch100'
 
         # device: cpu / gpu
         self.DEVICE = torch.device('cpu') if torch.cuda.is_available \
@@ -44,7 +36,7 @@ class GrParams:
 
         # Kernel params
         self.N_KERNELS = 64
-        self.vis_layers = ['0', '2', '4', '6', '8']
+        self.vis_layers = ['0', '1', '2', '3', '4', '5', '6']
 
         # Paths params
         self.VIS_PATH = 'vis/%s' % self.MODEL_NAME
@@ -62,18 +54,8 @@ class GrParams:
 
         # selected model for visualization
         weights_path = os.path.join(self.MODEL_PATH, self.MODEL_NAME + '.pth')
-        # Load gr-convnet model
-        #self.MODEL = torch.load(weights_path, map_location=self.DEVICE)
-        # grconvCLS
-        #self.MODEL = GrCLS().to(self.DEVICE)
-        # alexnetCLS
-        #self.MODEL = AlexNet(input_channels=self.N_CHANNELS).to(self.DEVICE)
-        #self.MODEL = PretrainedAlexnet().to(self.DEVICE)
-        #self.MODEL = myAlexNet(input_channels=self.N_CHANNELS).to(self.DEVICE)
         self.MODEL = AlexnetMap_v5(n_cls=5)
         self.MODEL.load_state_dict(torch.load(weights_path))
-        # alexnet imagenet
-        #self.MODEL = alexnet(pretrained=True)
         
         self.MODEL.eval()
         
