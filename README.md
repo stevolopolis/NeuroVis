@@ -17,9 +17,9 @@ Besides the conventional methods such as Activation Maximization (AM) and its va
 
 ## Files to interact with
 
-```main_am.py```
+```main_am.py``` - run vanilla gradient ascent on selected neuron (kernel in CNN).
 
-```neuro_activation.py```
+```neuro_activation.py``` - 
 
 ```am_guided_backprop.py```
 
