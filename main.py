@@ -11,17 +11,13 @@ Available AM losses and regularizers include:
 
 This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
-import torch
 import cv2
-import os
 
 from parameters import GrParams
 from paths import GrPath
-from models import ExtractModel, ExtractAlexModel, AlexnetModel, AlexnetMapRgbdFeatures, AlexnetMapFeatures
+from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
 from am import ActivationMaximization
 from utils import am_img_mat, get_layer_width
-from inference.models.grconvnet_cls import GrCLS
-from inference.models.alexnet import AlexNet
 
 # Params class containing parameters for AM visualization.
 params = GrParams()
@@ -31,7 +27,6 @@ paths = GrPath('gr-convnet')
 paths.create_am_path()
 
 # Trained model paths
-#model = params.MODEL.features
 model = params.MODEL
 
 # AM visualization
@@ -41,11 +36,8 @@ for vis_layer in params.vis_layers:
     paths.create_layer_paths(vis_layer)
 
     # Create submodel with output = selected kernel
-    #ext_model = ExtractModel(model, vis_layer, net_type=params.net)
-    #ext_model = AlexnetModel(model, vis_layer, net_type=params.net)
-    #ext_model = ExtractAlexModel(model, vis_layer, net_type=params.net)
-    #ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
-    ext_model = AlexnetMapFeatures(model, vis_layer)
+    ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
+    #ext_model = AlexnetMapFeatures(model, vis_layer)
     n_kernels = get_layer_width(ext_model)
 
     # AM on individual kernels
