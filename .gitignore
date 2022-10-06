@@ -4,3 +4,5 @@
 *.pth
 *.pyc
 *.pt
+vis
+dataset
