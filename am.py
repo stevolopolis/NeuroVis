@@ -17,7 +17,6 @@ The class also creates a 2x3 image matrix that contains:
 
 import torch 
 import cv2
-import torch.nn.functional as F
 from torchvision import transforms
 from utils import tensor2img
 
@@ -46,37 +45,15 @@ class ActivationMaximization():
         self.img_size = (1, img_size[0], img_size[1], img_size[2])
         self.device = device
 
-        """# Initialize image with gaussian noise
-        if params.INIT_METHOD == 'noise':
-            # image initialization for gr-convnet (4 channels)
-            if params.net == 'gr-convnet':
-                self.backprop = torch.randn(self.img_size, dtype=torch.float32,
-                                            requires_grad=True, device=device)
-            # image initialization for gr-convnet (3 channels with normalization) 
-            elif params.net in ('vgg16', 'resnet18'):
-                self.backprop = torch.randint(150, 180, self.img_size,
-                                              dtype=torch.float32, device=device)
-                self.backprop = self.backprop / 255
-                self.backprop.requires_grad = True        
-        # Initialize image with black pixels
-        elif init_method == 'zero':
-            self.backprop = torch.full(self.img_size, 1e-4,
-                                       dtype=torch.float32,
-                                       requires_grad=True,
-                                       device=device)"""
-
         self.lr = lr
         self.epochs = epochs
         self.loss = torch.tensor(0.0)
 
         # Preprocessing pipeline for torch.models
-        # Not applicable for 'gr-convnet'
         self.preprocess = transforms.Compose([
-        #transforms.Grayscale(num_output_channels=3)
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-        #self.optim = torch.optim.Adam([self.backprop], lr=lr, weight_decay=1e-6)
 
     def am(self, kernel_idx):
         pixel_start, pixel_backprop, pixel_fmap, pixel_target = self.backprop_pixel(kernel_idx)
@@ -195,11 +172,7 @@ class ActivationMaximization():
         for _ in range(self.epochs):
             optim.zero_grad()
             output = self.model(backprop)
-            #output = self.model(self.preprocess(backprop))
-            #output = F.softmax(output, dim=1)
-            # [0.2437, 0.4653, 0.6458, 0.0907, 0.3221]
             loss = - output[0][idx]
-            #loss = F.mse_loss(output, torch.tensor([[0.2437, 0.4653, 0.6458, 0.0907, 0.3221]]).to(params.DEVICE))
             
             loss.backward()
             optim.step()
