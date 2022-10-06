@@ -18,17 +18,14 @@ This file is Copyright (c) 2022 Steven Tin Sui Luo.
 from hypothesis import target
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
 
-from inference.models.grconvnet_cls import GrCLS
-from parameters import GrParams
+from parameters import Params
 from misc_functions import (convert_to_grayscale,
                             save_gradient_images,
                             get_positive_negative_saliency)
 
 # Params class containing parameters for AM visualization.
-params = GrParams()
+params = Params()
 
 class GuidedBackprop():
     """
@@ -105,11 +102,8 @@ if __name__ == '__main__':
     import cv2
 
     from paths import GrPath
-    from data import DataLoader, ClsDataLoader, GraspDataLoader
     from data_v2 import DataLoaderV2
-    from models import ExtractOutputModel, ExtractModel, ExtractAlexModel, AlexnetModel
     from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
-    from inference.models.alexnet import AlexNet
     from utils import tensor2img, get_layer_width
 
     # Path class for managing required directories
@@ -120,9 +114,6 @@ if __name__ == '__main__':
     # Select data for visualization
     data = []
     # DataLoader
-    #dataLoader = ClsDataLoader(randomize=True)
-    #dataLoader = GraspDataLoader(randomize=True)
-    # AlexnetGrasp_v5
     dataLoader = DataLoaderV2('datasets/top_5_compressed_paperspace/test', 1)
     for i, datum in enumerate(dataLoader.load_grasp()):
         if i >= params.N_IMG:
@@ -137,9 +128,6 @@ if __name__ == '__main__':
         paths.create_layer_paths(vis_layer)
         
         # Create submodel with output = selected kernel
-        #ext_model = ExtractModel(model, vis_layer, net_type=params.net)
-        #ext_model = ExtractAlexModel(model, vis_layer, net_type=params.net)
-        #ext_model = AlexnetModel(model, vis_layer, net_type=params.net)
         #ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
         ext_model = AlexnetMapFeatures(model, vis_layer)
         n_kernels = get_layer_width(ext_model)
@@ -150,9 +138,6 @@ if __name__ == '__main__':
 
             # Load Jacquard Dataset images
             print('Visualizing saliency maps')
-            #for img, img_id, img_cls in data:
-            #or img, label, label_list, img_id in data:
-            # AlexnetGrasp_v5
             for img, map, img_id in data:
                 # Create img folder
                 #paths.create_img_paths(img_id)
