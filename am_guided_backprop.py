@@ -101,14 +101,14 @@ if __name__ == '__main__':
     import os
     import cv2
 
-    from paths import GrPath
+    from paths import Path
     from data_v2 import DataLoaderV2
     from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
     from utils import tensor2img, get_layer_width
 
     # Path class for managing required directories
     # gr-convnet / resnet18 / vgg16
-    paths = GrPath('gr-convnet')
+    paths = Path()
     paths.create_guided_am_path()
 
     # Select data for visualization
