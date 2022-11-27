@@ -145,16 +145,19 @@ class AlexnetMapFeatures(nn.Module):
     """This class extracts the 'feature' module from AlexnetGrasp_v5 model.
         
     The indexing of the rgb / depth feature net is as follows:
-        0 - nn.Conv2d(192+192, 128, kernel_size=3, padding=1),
+        0 - nn.Conv2d(64+64, 32, kernel_size=5, padding=2),
         1 - nn.ReLU(inplace=True),
-        2 - nn.Conv2d(128, 128, kernel_size=3, padding=1),
-        3 - nn.ReLU(inplace=True),
-        4 - nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2),
+        2 - nn.Dropout(0.3),
+        3 - nn.MaxPool2d(kernel_size=3, stride=2),
+        4 - nn.Conv2d(32, 64, kernel_size=3, padding=1),
         5 - nn.ReLU(inplace=True),
-        6 - nn.Conv2d(64, 64, kernel_size=5, padding=2),
-        7 - nn.ReLU(inplace=True),
-        8 - nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
-        9 - nn.ReLU(inplace=True)
+        6 - vnn.Dropout(0.3),
+        7 - nn.Conv2d(64, 64, kernel_size=3, padding=1),
+        8 - nn.ReLU(inplace=True),
+        9 - nn.Dropout(0.3),
+        10 - nn.Conv2d(64, 64, kernel_size=3, padding=1),
+        11 - nn.ReLU(inplace=True),
+        12 - nn.Dropout(0.3),
 
     Specify the visualization layer using the above indexing pattern for
     <output> parameter.
