@@ -102,6 +102,7 @@ class AlexnetModel(nn.Module):
         self.output = output
         self.layers = {}
         for n, c in model.named_children():
+            print(n, c)
             self.layers[n] = c
 
     def forward(self, x):
@@ -206,11 +207,14 @@ class AlexnetMapRgbdFeatures(nn.Module):
         self.feature_type = feature_type
         self.layers = {}
         if feature_type == 'rgb':
-            for n, c in model.rgb_features.named_children():
-                self.layers[n] = c
+            for n, c in model.rgb_features.named_modules():
+                if isinstance(c, nn.Conv2d):
+                    self.layers[n] = c
         elif feature_type == 'd':
             for n, c in model.d_features.named_children():
                 self.layers[n] = c
+
+        print(self.layers)
 
     def forward(self, x):
         if self.feature_type == 'rgb':

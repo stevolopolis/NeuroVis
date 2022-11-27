@@ -13,9 +13,9 @@ import torch
 from torch.autograd import Variable
 from torchvision import models
 
-from parameters import GrParams
+from parameters import Params
 
-params = GrParams()
+params = Params()
 
 
 def convert_to_grayscale(im_as_arr):
@@ -137,7 +137,7 @@ def save_image(im, path):
     if isinstance(im, (np.ndarray, np.generic)):
         im = format_np_output(im)
         im = Image.fromarray(im)
-        im = im.resize((256, 256), Image.ANTIALIAS)
+        #im = im.resize((256, 256), Image.ANTIALIAS)
     im.save(path)
 
 

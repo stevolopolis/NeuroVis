@@ -21,9 +21,9 @@ from torchvision import transforms
 from utils import tensor2img
 
 from am_regularizers import LPLoss, TVLoss
-from parameters import GrParams
+from parameters import Params
 
-params = GrParams()
+params = Params()
 
 
 class ActivationMaximization():

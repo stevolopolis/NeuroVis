@@ -18,7 +18,7 @@ This file is Copyright (c) 2022 Steven Tin Sui Luo.
 import torch
 import torch.nn as nn
 
-class GuidedBackprop():
+class   GuidedBackprop():
     """
        Produces gradients generated with guided back propagation from the given image
     """
@@ -79,7 +79,7 @@ class GuidedBackprop():
         input_image.requires_grad_()
         x = self.model(input_image)
         x = x[0, kernel_idx]
-        conv_output = torch.sum(torch.abs(x))
+        conv_output = torch.mean(torch.abs(x))
         # Backward pass
         conv_output.backward()
         # Convert Pytorch variable to numpy array

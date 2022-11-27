@@ -1,8 +1,10 @@
-"""This file contains the architeture of a Gr-Convnet variant specified for
-classification of 30 classes. 
+"""
+This file contains the architeture of a Gr-Convnet variant specified for
+classification.
 
 The main backbone is unchanged and only a linear layer is concatenated to the
-end to prevent any changes to the expressivity of the original architecture."""
+end to prevent any changes to the expressivity of the original architecture.
+"""
 
 import torch
 import torch.nn as nn
@@ -12,8 +14,7 @@ from .grasp_model import GraspModel, ResidualBlock
 
 
 class GrCLS(GraspModel):
-
-    def __init__(self, input_channels=4, dropout=False, prob=0.0, channel_size=32):
+    def __init__(self, input_channels=4, prob=0.0, n_cls=5):
         super(GrCLS, self).__init__()
         self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=9, stride=1, padding=4)
         self.bn1 = nn.BatchNorm2d(32)

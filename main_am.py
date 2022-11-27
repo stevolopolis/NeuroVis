@@ -12,10 +12,14 @@ Available AM losses and regularizers include:
 This file is Copyright (c) 2022 Steven Tin Sui Luo.
 """
 import cv2
+import random
+import torch
 
 from parameters import Params
 from paths import Path
-from models import AlexnetMapRgbdFeatures, AlexnetMapFeatures
+import models
+from inference.models.alexnet import AlexnetMap_v3
+from inference.models.alexnet_ductranvan import Net
 from am import ActivationMaximization
 from utils import am_img_mat, get_layer_width
 
@@ -26,22 +30,35 @@ params = Params()
 paths = Path()
 paths.create_am_path()
 
-# Trained model paths
-model = params.MODEL
+# Initialized pretrained alexnetMap model
+model = AlexnetMap_v3().to(params.DEVICE)
+model.load_state_dict(torch.load('trained-models/%s/%s_epoch150.pth' % (params.MODEL_NAME, params.MODEL_NAME)))
+model.eval()
+
+"""model = Net({"input_shape": (3,256,256),
+            "initial_filters": 16, 
+            "num_outputs": 5}).to(params.DEVICE)
+model.load_state_dict(torch.load('trained-models/weights.pt'))
+model.eval()"""
 
 # AM visualization
 for vis_layer in params.vis_layers:
     print('Visualizing for %s layer' % vis_layer)
+    input()
     # Create sub-directory for chosen layer
     paths.create_layer_paths(vis_layer)
 
     # Create submodel with output = selected kernel
-    ext_model = AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
-    #ext_model = AlexnetMapFeatures(model, vis_layer)
+    #ext_model = models.AlexnetMapRgbdFeatures(model, vis_layer, feature_type='rgb')
+    ext_model = models.AlexnetMapFeatures(model, vis_layer)
+
+    #ext_model = model
     n_kernels = get_layer_width(ext_model)
 
     # AM on individual kernels
-    for kernel_idx in range(n_kernels):
+    kernels = [i for i in range(n_kernels)]
+    random.shuffle(kernels)
+    for kernel_idx in kernels:
         save_img_path = '%s/%s_%s.png' % (paths.save_subdir, vis_layer, kernel_idx)
 
         #ext_model = model

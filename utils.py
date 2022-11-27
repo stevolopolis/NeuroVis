@@ -12,9 +12,9 @@ import numpy as np
 
 from PIL import Image
 
-from parameters import GrParams
+from parameters import Params
 
-params = GrParams()
+params = Params()
 
 
 # ===================================
@@ -22,15 +22,49 @@ params = GrParams()
 # ===================================
 class AddGaussianNoise(torch.nn.Module):
     """Gaussian noise augmentation fn used in DataLoader class."""
-    def __init__(self, mean=0., std=1.):
+    def __init__(self, mean=0., std=1., device=params.DEVICE):
         self.std = std
         self.mean = mean
+        self.device = device
         
     def __call__(self, tensor):
-        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+        return tensor + torch.randn(tensor.size()).to(self.device) * self.std + self.mean
     
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
+
+
+def tensor_concat(tensor1, tensor2):
+    """
+    Concatenates two grasp candidate tensors.
+    For example, this function allows tensor1 and tensor2 with the following shapes 
+    to be concatenated:
+        - tensor1.shape == (10, 10, 6)
+        - tensor2.shape == (1, 6, 6)
+    which becomes,
+        - tensor_concat(tensor1, tensor2).shape == (11, 10, 6)
+    Or
+        - tensor1.shape == (3, 11, 4)
+        - tensor2.shape == (5, 5, 4)
+    which becomes,
+        - tensor_concat(tensor1, tensor2).shape == (8, 11, 4)
+    This function allows tensors of one unequal dimension to concatenate by 
+    broadcasting the smaller tensor by copying it's last element multiple times
+    to match the dimensions of the bigger tensor.
+    """
+    n_dim1 = tensor1.shape[1]
+    n_dim2 = tensor2.shape[1]
+    n_dim_diff = abs(n_dim1 - n_dim2)
+    if n_dim1 < n_dim2:
+        broadcasting_elem = torch.unsqueeze(tensor1[:, -1, :], dim=1).repeat(1, n_dim_diff, 1)
+        broadcasted_tensor = torch.cat((tensor1, broadcasting_elem), dim=1)
+        return torch.cat((broadcasted_tensor, tensor2), dim=0)
+    elif n_dim1 > n_dim2:
+        broadcasting_elem = torch.unsqueeze(tensor2[:, -1, :], dim=1).repeat(1, n_dim_diff, 1)
+        broadcasted_tensor = torch.cat((tensor2, broadcasting_elem), dim=1)
+        return torch.cat((tensor1, broadcasted_tensor), dim=0)
+    else:
+        return torch.cat((tensor1, tensor2), dim=0)
 
 
 # ======================================
